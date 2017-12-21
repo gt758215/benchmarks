@@ -50,10 +50,14 @@ from cnn_util import ParamSpec
 from models import model_config
 from platforms import util as platforms_util
 
+import tensorpack as tp
+
 # _DEFAULT_PARAMS maps from each parameter's name to its ParamSpec. For each
 # parameter listed here, a command line flag will be defined for
 # tf_cnn_benchmarks.py.
 _DEFAULT_PARAMS = {
+    'iter_size':
+        ParamSpec('integer', 1, 'Acuumulation'),
     'model':
         ParamSpec('string', 'trivial', 'name of the model to run'),
 
@@ -1433,6 +1437,9 @@ class BenchmarkCNN(object):
             loss_scale_normal_steps=self.loss_scale_normal_steps,
             inc_loss_scale_every_n=self.params.fp16_inc_loss_scale_every_n,
             is_chief=not self.job_name or self.task_index == 0)
+
+        if(self.params.iter_size > 1):
+          opt = tp.optimizer.AccumGradOptimizer(opt, self.params.iter_size)
 
         self.variable_mgr.append_apply_gradients_ops(
             gradient_state, opt, clipped_grads, training_ops, loss_scale_params)
